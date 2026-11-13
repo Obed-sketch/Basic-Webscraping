@@ -1,4 +1,6 @@
+import csv
 import os
+import sys
 
 import praw
 from textblob import TextBlob
@@ -28,5 +30,41 @@ def get_sentiment(subreddit, keyword):
         return 0.0
     return sum(sentiments)/len(sentiments)
 
+
+def get_sentiment_demo(subreddit, keyword, path=None):
+    """DEMO MODE (added Nov 2026): the same average-polarity computation
+    as get_sentiment(), but over the bundled SYNTHETIC sample posts in
+    sample_reddit_posts.csv instead of live Reddit. The sample posts
+    are made up -- the result demonstrates the pipeline only and is not
+    real Reddit sentiment."""
+    if path is None:
+        path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                            'sample_reddit_posts.csv')
+    with open(path, newline='', encoding='utf-8') as f:
+        rows = [r for r in csv.DictReader(f)
+                if r['subreddit'] == subreddit and r['keyword'] == keyword]
+    if not rows:
+        return 0.0, 0
+    sentiments = [TextBlob(r['title']).sentiment.polarity for r in rows]
+    return sum(sentiments) / len(sentiments), len(rows)
+
+
+def _credentials_configured():
+    return all([
+        os.environ.get('REDDIT_CLIENT_ID', 'YOUR_ID') != 'YOUR_ID',
+        os.environ.get('REDDIT_CLIENT_SECRET', 'YOUR_SECRET') != 'YOUR_SECRET',
+        os.environ.get('REDDIT_USER_AGENT', 'YOUR_USER_AGENT') != 'YOUR_USER_AGENT',
+    ])
+
+
 if __name__ == '__main__':
-    print(f"AMD Sentiment: {get_sentiment('stocks', 'AMD')}")
+    if '--demo' in sys.argv or not _credentials_configured():
+        # Demo mode: no Reddit credentials needed (or explicitly asked
+        # for). Live mode requires real credentials in the environment
+        # variables named at the top of this file.
+        print("DEMO MODE: scoring bundled synthetic sample posts "
+              "(sample_reddit_posts.csv) -- not live Reddit data.")
+        avg, n = get_sentiment_demo('stocks', 'AMD')
+        print(f"AMD Sentiment (demo, {n} sample posts): {avg}")
+    else:
+        print(f"AMD Sentiment: {get_sentiment('stocks', 'AMD')}")

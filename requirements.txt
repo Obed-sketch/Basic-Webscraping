@@ -3,4 +3,10 @@ beautifulsoup4
 praw
 textblob
 newspaper3k
-transformers
+# lxml_html_clean: split out of lxml; newspaper3k fails to import without it
+lxml_html_clean
+nltk
+# transformers pinned below v5 (Nov 2026): v5 removed the
+# "summarization" pipeline that the news analyzer uses.
+transformers>=4.40,<5
+torch
