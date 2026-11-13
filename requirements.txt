@@ -1,0 +1,6 @@
+requests
+beautifulsoup4
+praw
+textblob
+newspaper3k
+transformers
